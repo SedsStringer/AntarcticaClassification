@@ -1,6 +1,6 @@
 //____________________PIXEL COUNTER____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+/* AUTHOR: Christopher D Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com), Twitter: @sedsstringer
    DESCRIPTION: Calculates the number of pixels for each land type
    METHODS: 1) SETUP: Imports coastlines and classified raster
             2) COUNTER: Counts the number of pixels in each land class
