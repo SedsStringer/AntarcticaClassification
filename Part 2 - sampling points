@@ -111,29 +111,35 @@ var veg = ee.FeatureCollection.randomPoints(veg.geometry(), vegSampleNo).map(veg
 
 Export.table.toAsset({
   collection: water,
-  description: 'waterAApoints'
+  description: 'waterAApoints',
+  fileFormat: 'SHP'
 });
 
 // Export.table.toAsset({
 //   collection: ice,
-//   description: 'iceAApoints'
+//   description: 'iceAApoints',
+     fileFormat: 'SHP'
 // });
 Export.table.toAsset({
   collection: igneous,
-  description: 'igneousAApoints'
+  description: 'igneousAApoints',
+  fileFormat: 'SHP'
 });
 Export.table.toAsset({
   collection: coarse,
-  description: 'coarseAApoints'
+  description: 'coarseAApoints',
+  fileFormat: 'SHP'
 });
 Export.table.toAsset({
   collection: fine,
-  description: 'fineAApoints'
+  description: 'fineAApoints',
+  fileFormat: 'SHP'
 });
 Export.table.toAsset({
   collection: veg,
-  description: 'vegAApoints'
-
+  description: 'vegAApoints',
+  fileFormat: 'SHP'
+});
 
 
 
