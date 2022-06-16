@@ -1,6 +1,6 @@
 //____________________LANDSAT 8 TOPOGRAPHIC CORRECTION & IMAGE EXPORTER____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk)
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
    DESCRIPTION: This script takes Landsat 8 TOA (tier 2) images, applies a cloud mask and 
                 topographically corrects the images. It also exports an NDSI image of the region
    BANDS USED: Red, Green, Blue, NIR, SWIR1, SWIR2 
@@ -230,5 +230,8 @@ Export.image.toDrive({ // Exports the image to Google Drive
   scale: 30,
   region: AOI.buffer(1000)
 });
+
+/* I personally prefer to export to Drive so I can inspect the images in another GIS software (e.g. ArcGIS or QGIS). 
+Part 2 requires the image to be an asset, so you can also use "Export.image.toAsset", or just manually import the image to GEE as an asset later */
 
 
