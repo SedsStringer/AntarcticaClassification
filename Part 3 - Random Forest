@@ -1,0 +1,89 @@
+//____________________PART 3: RANDOM FOREST____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+  DESCRIPTION: Runs a random forest classifier over any remaining unclassified data
+  METHODS:  1) SETUP: Zooms to 'Area of Interest' and imports Landsat 8 TOA (tier 2) images 
+            2) CLASSIFICATION : Runs the random forest classifier
+            3) EXPORT: Exports the classified image 
+  FURTHER COMMENTS: This codes should be used in a limited scope, to classify regions that cannot be classified by K-means or by a slop threshold. 
+  To be used before the second order clustering */
+ //____________________________________________________________________________________________________________________
+
+//____________________1) SETUP____________________
+
+// a) Centre the map of the AOI
+
+AOI = ee.FeatureCollection('').geometry() // Define AOI
+
+Map.centerObject(AOI, 9);
+
+// b) Import image
+
+var image = ee.Image('');
+var inBands = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6'];
+var outBands = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2'];
+
+// ADD NDWI, NDVI, NDSI
+
+var addNDWI = function(img) {
+  var NDWI = img.normalizedDifference(['green', 'nir']).rename('ndwi');
+  return img.addBands(NDWI);
+};
+
+var with_NDWI = addNDWI(image);
+
+var addNDVI = function(img) {
+  var NDVI = img.normalizedDifference(['nir', 'red']).rename('ndvi');
+  return img.addBands(NDVI);
+};
+
+var with_NDVI = addNDVI(with_NDWI);
+
+var addNDSI = function(img) {
+  var NDSI = img.normalizedDifference(['green', 'swir1']).rename('ndsi');
+  return img.addBands(NDSI);
+};
+
+var image = addNDSI(with_NDVI);
+
+Map.addLayer(image, {bands: ['red', 'green', 'blue'], max: 0.5}, 'Landsat');
+
+var selected = ee.FeatureCollection(''); // polygon for the area requiring analysis, , this should be a polgon of the areas not yet classified
+
+Map.addLayer(selected, {}, 'Selected region');
+
+var ND = image.clip(selected);
+
+var bands = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2', 'ndvi', 'ndwi', 'ndsi'];
+
+//____________________2) CLASSIFICATION ____________________
+
+// a) Create a training dataset
+
+var merged_collection = land.merge(water).merge(ice).merge(N_D); // "land", "water", "ice", and "N_D" are points manually placed in the GEE console
+
+var training = ND.select(bands).sampleRegions({ // Function to sample pixels at each point 
+  collection: merged_collection,
+  properties: ['landcover'], // This property is defined when creating the merged_collection points
+  scale: 30 // set scale
+}); 
+
+var classifier = ee.Classifier.smileRandomForest(100).train({ // Creates the classifier and classifies the image using random forest with 100 trees
+  features: training,
+  classProperty: 'landcover',
+  inputProperties: bands
+});
+
+var classified = ND.select(bands).classify(classifier); // Classifies the image
+var class_map = classified.clip(selected);
+
+
+//____________________3) EXPORT ____________________
+
+Export.image.toDrive({
+  image: class_map,
+  description: '', 
+  scale: 30, 
+  region: AOI.geometry(),
+  maxPixels: 1e9
+});
