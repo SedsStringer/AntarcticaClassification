@@ -1,0 +1,82 @@
+//____________________GRIDDED ACCURACY POINT COUNTER ____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+   DESCRIPTION: Counts the number of accurate and inaccurate points in a grid with 10x10km cells
+   METHODS: 1) SETUP: Imports coastlines and accuracy points
+            2) POINT COUNTER: Counts the number of poitns classified as accurate and inaccurate in each cell 
+            3) EXPORT: Export the counts as CSV files to google drive
+//____________________________________________________________________________________________________________________________________________________________________
+
+//____________________1) SETUP____________________
+
+// a) Import coastlines
+
+var coastline = ee.FeatureCollection('')
+
+Map.addLayer(coastline);
+
+// b) Create grid
+
+// You will need to draw a rectangle over each of your sites - store these as a single Geometry Import in GEE
+
+var grid = geometry.coveringGrid({proj: 'EPSG:3857', scale: 10000}); // scale = 10km, geometry refers to the rectangles you drew over each site
+
+Export.table.toDrive({ // This will help you plot the data in GIS software
+  collection: grid,
+  folder: 'Counts',
+  description:'grid',
+  fileFormat: 'shp'
+});
+
+c) Import points
+
+// The final comment in part 3 is relevant to this step.
+
+var accuratePoints = ee.FeatureCollection('users/sedsstringer/accuratePointsAA'); // Points classed as accurate (across all classes)
+var inAccuratePoints = ee.FeatureCollection('users/sedsstringer/inaccuratePointsAA'); // Points classed as inaccurate (across all classes)
+
+//____________________2) POINT COUNTER ____________________
+
+// a) Convert points to raster
+
+var accPointImg = accuratePoints.reduceToImage({ // Accurate points 
+  properties: ['Code'],
+  reducer: ee.Reducer.mean()
+});
+
+var inaccPointImg = inAccuratePoints.reduceToImage({ // Inaccurate points
+  properties: ['Code'],
+  reducer: ee.Reducer.mean()
+});
+
+// b) Function to count points within each grid cell
+
+var countGridImg = function(image) {
+  var countObject = image.reduceRegions({
+    collection: grid,
+    reducer: ee.Reducer.count(),
+    scale: 30,
+});
+  return countObject;
+};
+
+// c) Count the number of points in each cell
+
+var countAcc = countGridImg(accPointImg); // Counts accurate points 
+var countInacc = countGridImg(inaccPointImg); // Counts inaccurate points
+
+//____________________3) EXPORT  ____________________
+
+Export.table.toDrive({
+  collection: countAcc,
+  folder: 'Counts',
+  description:'accurateCount',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: countInacc,
+  folder: 'Counts',
+  description:'inaccurateCount',
+  fileFormat: 'csv'
+});
