@@ -4,7 +4,7 @@
    DESCRIPTION: Calculates the number of pixels for each land type
    METHODS: 1) SETUP: Imports coastlines and classified raster
             2) COUNTER: Counts the number of pixels in each land class
-            4) EXPORT: Export the counts as CSV to Google Drive */                          
+            3) EXPORT: Export the counts as CSV to Google Drive */                          
 //____________________________________________________________________________________________________________________________________________________________________
 
 //____________________1) SETUP____________________
@@ -63,7 +63,7 @@ var count_wetIce = countGridImg(wetIcePix);
 var count_moss = countGridImg(mossPix);
 
 
-//____________________2) EXPORT ____________________
+//____________________3) EXPORT ____________________
 
 
 Export.table.toDrive({
