@@ -1,6 +1,6 @@
 //____________________GRIDDED ACCURACY POINT COUNTER ____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+/* AUTHOR: Christopher D Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com), Twitter: @sedsstringer
    DESCRIPTION: Counts the number of accurate and inaccurate points in a grid with 10x10km cells
    METHODS: 1) SETUP: Imports coastlines and accuracy points
             2) POINT COUNTER: Counts the number of poitns classified as accurate and inaccurate in each cell 
