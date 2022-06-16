@@ -1,0 +1,39 @@
+/____________________POINT VIEWER____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+   DESCRIPTION: Allows you to view each accuracy assessment point for visual inspection
+   METHODS: 1) SETUP: Imports points and Sentinel-2 images
+            2) VIEWER: Zooms to point                   
+//____________________________________________________________________________________________________________________________________________________________________
+
+//____________________1) SETUP____________________
+
+// a) Deinfe your AOI as the whole of Antarctica
+
+var AOI = 
+    ee.Geometry.Polygon(
+        [[[140.26466941454987, -26.750074701645797],
+          [140.26466941454987, -82.16712735708612],
+          [347.6865444145499, -82.16712735708612],
+          [347.6865444145499, -26.750074701645797]]], null, false);
+          
+// b) Import points
+
+var waterAApoints = ee.FeatureCollection('users/sedsstringer/waterAApoints2');
+var iceAApoints = ee.FeatureCollection('users/sedsstringer/erasedPointResult_IceAAPoints');
+var igneousAApoints = ee.FeatureCollection('users/sedsstringer/igneousAApoints2');
+var coarseAApoints = ee.FeatureCollection('users/sedsstringer/coarseAApoints2');
+var fineAApoints = ee.FeatureCollection('users/sedsstringer/fineAApoints2');
+var vegAApoints = ee.FeatureCollection('users/sedsstringer/vegAApoints2');
+
+// c) Import images for validation (e.g. from Sentinel-2)
+
+var images = ee.ImageCollection(''); // Image Collection of Sentinel-2 images for the regions
+
+//____________________2) VIEWER ____________________
+
+var landClass = (); // Define the land class points you want to validate (e.g. waterAApoints)
+
+var listOfPoints = landClass.toList(landClass.size()); // Convert the points (FeatureCollection) into a list
+var point = ee.Feature(listOfPoints.get(0)); // Project the list and choose the number of the point you want to validate
+Map.addLayer(point); // Add the point to the map
