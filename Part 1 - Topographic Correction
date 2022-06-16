@@ -31,7 +31,7 @@ Map.addLayer(collection);
 
 // c) Cloud Mask (NB: "QA" = Quality Assessment. This is calcualted by Landsat and details are available in their documentations).
 
-/* This script isn't perfect, and sometimes it is worth removing the aspects that deal with cirrus clouds as it isn't percet and 
+/* Sometimes it is worth removing the aspects that deal with cirrus clouds as it isn't pefect and 
     may hide too much of the image. Have a play around and test it out to make sure it meets your needs */
 
 var getQABits = function(image, start, end, newName) {
@@ -87,7 +87,7 @@ var dem_mask = REMA.clip(AOI.buffer(1000)); //CLIPS REMA TO THE COASTLINE + 1KM 
 
 // ____________________2) TOPOGRAPHIC CORRECTION____________________
 
-// (adapted from: https://mygeoblog.com/2018/10/17/terrain-correction-in-gee/) - I refer you to this document for further info
+// Adapted from: https://mygeoblog.com/2018/10/17/terrain-correction-in-gee/ - I refer you to this document for further info
 
 var boxcar = ee.Kernel.square({   // Define a boxcar or low-pass kernel.
   radius: 3, units: 'pixels', normalize: true
