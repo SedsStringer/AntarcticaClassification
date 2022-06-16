@@ -11,7 +11,7 @@ These scripts can be broadly split into two components: i) Land Classification; 
 
 Part 1: This step topographically corrects selected images
 
-Part 2: This step runs a PCA over the images and clusters them into the desrired number of clusters
+Part 2: This step runs a PCA over the images and clusters them into the desired number of clusters
 
 Part 3: This is the script used in the limited times where a random forest was required
 
