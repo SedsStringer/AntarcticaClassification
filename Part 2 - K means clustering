@@ -1,6 +1,6 @@
 //____________________IMAGE CLUSTERER ____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+/* AUTHOR: Christopher D Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com), Twitter: @sedsstringer
    CONTRIBUTORS: 
    DESCRIPTION: This script conducts a PCA on topographically corrected images and clusters them.
                 Images topographcially corrected in STEP 1
