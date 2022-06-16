@@ -2,7 +2,7 @@
 
 /* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
    DESCRIPTION: This script takes Landsat 8 TOA (tier 2) images, applies a cloud mask and 
-                topographically corrects the images. It also exports an NDSI image of the region
+                topographically corrects the images. 
    BANDS USED: Red, Green, Blue, NIR, SWIR1, SWIR2 
    METHODS: 1) SETUP: Zooms to 'Area of Interest' and imports Landsat 8 TOA (tier 2) images 
             2) TOPOGRAPHIC CORRECTION: Topographically corrects images to reduce the impact of relief
