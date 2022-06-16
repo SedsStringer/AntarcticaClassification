@@ -1,0 +1,143 @@
+//____________________SAMPLING POINTS____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+   DESCRIPTION: Calculates the number of pixels for each land type
+   METHODS: 1) SETUP: Imports coastlines and classified raster
+            2) CREATE POLYGONS: Creates polgons of each land type from raster 
+            3) POINT GENERATOR: Creates random points for each land type */                        
+//____________________________________________________________________________________________________________________________________________________________________
+
+//____________________1) SETUP____________________
+
+// a) Create a geometry over Antarctica (this prevented the code from crashing later) 
+
+var AOI = 
+    ee.Geometry.Polygon(
+        [[[140.26466941454987, -26.750074701645797],
+          [140.26466941454987, -82.16712735708612],
+          [347.6865444145499, -82.16712735708612],
+          [347.6865444145499, -26.750074701645797]]], null, false);
+          
+// b) Import coastline
+
+var coastline = ee.FeatureCollection(''); // MB: multiple coastlines can be added by using ".merge('')"
+
+// c) Import classified rasters
+
+var images = ee.ImageCollection('').mosaic(); // I hosted my classified images in an Image Collection and then moasiced them into 1 image
+
+var classImg = images.clipToCollection(coastline)); 
+
+Map.addLayer(classImg, {palette: ['black', 'blue',  '#000066', '#99CCFF', '#FFFFFF', '#994c00', 'FF3333', '#FF8000', '#FFFFCC', 'green'], max: 9});
+
+//____________________2) CREATE POLYGONS ____________________
+
+// a) Converts raster to polgon
+
+var landcover = classImg.select('b1'); // selects the band with the codes for each land type
+
+var classes = ee.List([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) // function to convert the image into a polygon 
+  .map(function(n) {
+    var classImage = landcover.eq(ee.Number(n));
+    var vectors = classImage.updateMask(classImage)
+      .reduceToVectors({
+        reducer: ee.Reducer.countEvery(), 
+        geometry: AOI, 
+        scale: 30,
+        maxPixels: 158269741376})
+      .geometry();
+    return ee.Feature(vectors, {"class": n});
+  });
+  var result = ee.FeatureCollection(classes);
+  
+// b) Divides the polygon into its constituent parts
+
+var water = result.filterMetadata('class', 'equals', 1); // selects the water class from the polygon 
+var turbid = result.filterMetadata('class', 'equals', 2); // selects the turbid water class from the polygon 
+var wetIce = result.filterMetadata('class', 'equals', 3); // selects the wet ice class from the polygon 
+var ice = result.filterMetadata('class', 'equals', 4); // selects the ice class from the polygon 
+var igneous = result.filterMetadata('class', 'equals', 6); // selects land (non-diff) water class from the polygon 
+var coarse = result.filterMetadata('class', 'equals', 7); // selects the coarse sed. class from the polygon 
+var fine = result.filterMetadata('class', 'equals', 8); // selects the fine sed. class from the polygon 
+var veg = result.filterMetadata('class', 'equals', 9); // selects the vegetation class from the polygon 
+
+var water = water.merge(turbid); // megeres water with turbid (see manuscript for details)
+var ice = ice.merge(wetIce); // merges ice with wet ice (see manuscript for details)
+
+// c) assigns each part a code (same as raster value)
+
+var waterCode = function(feature) {
+  return feature.set('Code', 1);   
+};
+var iceCode = function(feature) {
+  return feature.set('Code', 4);   
+};
+var igneousCode = function(feature) {
+  return feature.set('Code', 6);   
+};
+var coarseCode = function(feature) {
+  return feature.set('Code', 7);   
+};
+var fineCode = function(feature) {
+  return feature.set('Code', 8);   
+};
+var vegCode = function(feature) {
+  return feature.set('Code', 9);   
+};
+
+//____________________3) POINT GENERATOR ____________________
+
+// a) Define the number of point for each land type
+
+var waterSampleNo = 100; // No. points within water class
+var iceSampleNo = 100; // No. points within ice class
+var igneousSampleNo = 100; // No. points within land (non-diff) class
+var coarseSampleNo = 100; // No. points within coarse sed. class
+var fineSampleNo = 100; // No. points within fine sed. class
+var vegSampleNo = 100; // No. points within vegetation class
+
+print('Pixel count', waterSampleNo + iceSampleNo + igneousSampleNo + coarseSampleNo + fineSampleNo + vegSampleNo); // just to check you have the correct number of points
+
+// b) Generate random points for each land type
+
+var water = ee.FeatureCollection.randomPoints(water.geometry(), waterSampleNo).map(waterCode);
+var ice = ee.FeatureCollection.randomPoints(ice.geometry(), iceSampleNo).map(iceCode);
+var igneous = ee.FeatureCollection.randomPoints(igneous.geometry(), igneousSampleNo).map(igneousCode);
+var coarse = ee.FeatureCollection.randomPoints(coarse.geometry(), coarseSampleNo).map(coarseCode);
+var fine = ee.FeatureCollection.randomPoints(fine.geometry(), fineSampleNo).map(fineCode);
+var veg = ee.FeatureCollection.randomPoints(veg.geometry(), vegSampleNo).map(vegCode);
+
+//____________________4) EXPORT ____________________
+
+Export.table.toAsset({
+  collection: water,
+  description: 'waterAApoints'
+});
+
+// Export.table.toAsset({
+//   collection: ice,
+//   description: 'iceAApoints'
+// });
+Export.table.toAsset({
+  collection: igneous,
+  description: 'igneousAApoints'
+});
+Export.table.toAsset({
+  collection: coarse,
+  description: 'coarseAApoints'
+});
+Export.table.toAsset({
+  collection: fine,
+  description: 'fineAApoints'
+});
+Export.table.toAsset({
+  collection: veg,
+  description: 'vegAApoints'
+
+
+
+
+
+
+
+
