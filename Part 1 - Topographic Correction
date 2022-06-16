@@ -1,6 +1,6 @@
 //____________________LANDSAT 8 TOPOGRAPHIC CORRECTION ____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+/* AUTHOR: Christopher D Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com), Twitter: @sedsstringer
    DESCRIPTION: This script takes Landsat 8 TOA (tier 2) images, applies a cloud mask and 
                 topographically corrects the images. 
    BANDS USED: Red, Green, Blue, NIR, SWIR1, SWIR2 
