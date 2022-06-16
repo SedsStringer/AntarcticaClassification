@@ -5,6 +5,7 @@
   METHODS:  1) SETUP: Zooms to 'Area of Interest' and imports Landsat 8 TOA (tier 2) images 
             2) CLASSIFICATION : Runs the random forest classifier
             3) EXPORT: Exports the classified image 
+  BANDS USED: Red, Green, Blue, NIR, SWIR1, SWIR2
   FURTHER COMMENTS: This codes should be used in a limited scope, to classify regions that cannot be classified by K-means or by a slop threshold. 
   To be used before the second order clustering */
  //____________________________________________________________________________________________________________________
