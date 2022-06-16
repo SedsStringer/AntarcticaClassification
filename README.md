@@ -2,7 +2,7 @@
 
 These are the codes used to classify the landscape of Antarctica in Google Earth Engine (JavaScript)
 
-These scripts can be broadly split into two components: i) Land Classification; ii) Accuracy Assessmment
+These scripts can be broadly split into two components: i) Land Classification; ii) Accuracy Assessmment. I have split these into branches.
 
 # 1) Land Classification
 
