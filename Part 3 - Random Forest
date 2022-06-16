@@ -1,6 +1,6 @@
-//____________________PART 3: RANDOM FOREST____________________
+//____________________PART 3: RANDOM FOREST CLASSIFIER____________________
 
-/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+/* AUTHOR: Christopher D Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com), Twitter: @sedsstringer
   DESCRIPTION: Runs a random forest classifier over any remaining unclassified data
   METHODS:  1) SETUP: Zooms to 'Area of Interest' and imports Landsat 8 TOA (tier 2) images 
             2) CLASSIFICATION : Runs the random forest classifier
