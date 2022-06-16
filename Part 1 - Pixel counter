@@ -1,0 +1,137 @@
+//____________________PIXEL COUNTER____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+   DESCRIPTION: Calculates the number of pixels for each land type
+   METHODS: 1) SETUP: Imports coastlines and classified raster
+            2) COUNTER: Counts the number of pixels in each land class
+            4) EXPORT: Export the counts as CSV to Google Drive */                          
+//____________________________________________________________________________________________________________________________________________________________________
+
+//____________________1) SETUP____________________
+
+// a) Import coatline(s)
+
+var coastline = ee.FeatureCollection(''); // MB: multiple coastlines can be added by using ".merge('')"
+
+// b) Import classified rasters
+
+var images = ee.ImageCollection('').mosaic(); // I hosted my classified images in an Image Collection and then moasiced them into 1 image
+
+var classImg = images.clipToCollection(coastline)); 
+
+Map.addLayer(classImg, {palette: ['black', 'blue',  '#000066', '#99CCFF', '#FFFFFF', '#994c00', 'FF3333', '#FF8000', '#FFFFCC', 'green'], max: 9});
+
+//____________________2) COUNTER ____________________
+
+// a) Create images that just includes individual land classes
+
+var noDataPix = classImg.updateMask(classImg.eq(0)); // No data pixels
+var waterPix = classImg.updateMask(classImg.eq(1)); // Water pixels
+var turbPix = classImg.updateMask(classImg.eq(2)); // Turbid water pixels
+var wetIcePix = classImg.updateMask(classImg.eq(3)); // Wet ice pixels
+var icePix = classImg.updateMask(classImg.eq(4)); // Ice pixels
+var nonDiffPix = classImg.updateMask(classImg.eq(5)); // Non-differentiated land pixels 
+var ignPix = classImg.updateMask(classImg.eq(6)); // Bedrock pixels
+var coarsePix = classImg.updateMask(classImg.eq(7)); // Coarse sediment pixels
+var finePix = classImg.updateMask(classImg.eq(8)); // Fine sediment pixels
+var mossPix = classImg.updateMask(classImg.eq(9)); // Vegetation pixels
+
+// b) Define a function to count the pixels
+
+var AOI = coastline;
+
+var countImg = function(image) {
+  var countObject = image.reduceRegions({
+    collection: AOI,
+    reducer: ee.Reducer.count(),
+    scale: 30,
+});
+  return countObject;
+};
+
+// c) Count each land class 
+
+var count_coarse = countGridImg(coarsePix);
+var count_fine = countGridImg(finePix);
+var count_ice = countGridImg(icePix);
+var count_igneous = countGridImg(ignPix);
+var count_ND = countGridImg(noDataPix);
+var count_nonDiff = countGridImg(nonDiffPix);
+var count_turbid = countGridImg(turbPix);
+var count_water = countGridImg(waterPix);
+var count_wetIce = countGridImg(wetIcePix);
+var count_moss = countGridImg(mossPix);
+
+
+//____________________2) EXPORT ____________________
+
+
+Export.table.toDrive({
+  collection: count_coarse,
+  folder: 'Accuracy',
+  description:'CoarseCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_fine,
+  folder: 'Accuracy',
+  description:'FineCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_ice,
+  folder: 'Accuracy',
+  description:'IceCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_igneous,
+  folder: 'Accuracy',
+  description:'IgneousCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_ND,
+  folder: 'Accuracy',
+  description:'noDataCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_nonDiff,
+  folder: 'Accuracy',
+  description:'nonDiffCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_turbid,
+  folder: 'Accuracy',
+  description:'TurbidCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_water,
+  folder: 'Accuracy',
+  description:'WaterCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_wetIce,
+  folder: 'Accuracy',
+  description:'wetIceCount',
+  fileFormat: 'CSV'
+});
+
+Export.table.toDrive({
+  collection: count_moss,
+  folder: 'Accuracy',
+  description:'mossCount',
+  fileFormat: 'CSV'
+});
