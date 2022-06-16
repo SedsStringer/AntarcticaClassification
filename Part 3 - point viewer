@@ -37,3 +37,6 @@ var landClass = (); // Define the land class points you want to validate (e.g. w
 var listOfPoints = landClass.toList(landClass.size()); // Convert the points (FeatureCollection) into a list
 var point = ee.Feature(listOfPoints.get(0)); // Project the list and choose the number of the point you want to validate
 Map.addLayer(point); // Add the point to the map
+
+/* You should set up a spreadsheet and note down the number of the point and your assessment, you can then use a GIS software to create a set of 
+accurate and inaccurate points that spans across all classes...this will help you with part 4 */
