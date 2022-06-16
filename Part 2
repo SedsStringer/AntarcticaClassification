@@ -1,0 +1,158 @@
+//____________________IMAGE CLUSTERER ____________________
+
+/* AUTHOR: Chris Stringer (gycds@leeds.ac.uk/sedsstringer@gmail.com)
+   CONTRIBUTORS: 
+   DESCRIPTION: This script conducts a PCA on topographically corrected images and clusters them.
+                Images topographcially corrected in STEP 1
+   BANDS USED: Red, Green, Blue, NIR, SWIR1, SWIR2, 
+   METHODS: 1) SETUP: Zooms to 'Area of Interest' and imports corrected images (see step 1)
+            2) PCA
+            3) CLUSTERING: K-means clusters the PCA image                             */
+//____________________________________________________________________________________________________________________________________________________________________
+
+//_____________________________1) SETUP_____________________________
+
+// a) Centre the map over your AOI 
+Map.centerObject(AOI, 8);
+
+// b) Set bands (if needed, the band names may be retained from step 1 - do check
+var inBands = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6'];
+var outBands = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2'];
+
+// c) Import image
+var image = ee.Image(''); //IMPORTS TOPO CORRECTED IMAGE
+var image = image.select(inBands, outBands);
+
+// var clipBounds = ee.FeatureCollection(''); // In the second order classification, you will need to clip your image to the "land", "ice", "water" polygons - leave commented out for the first order classification
+// var image = image.clipToCollection(clipBounds);
+
+
+var coast = ee.FeatureCollection(''); // Add the coastline/extent of the analysis
+
+Map.addLayer(image, {bands: ['red', 'green', 'blue'], max:0.5})
+
+// d) Add some new bands (NDWI, NDVI, NDSI), to aid the identification of water, vegetation and snow/ice 
+
+var addNDWI = function(img) {
+  var NDWI = img.normalizedDifference(['green', 'nir']).rename('ndwi');
+  return img.addBands(NDWI);
+};
+var with_NDWI = addNDWI(image);
+
+var addNDVI = function(img) {
+  var NDVI = img.normalizedDifference(['nir', 'red']).rename('ndvi');
+  return img.addBands(NDVI);
+};
+var with_NDVI = addNDVI(with_NDWI);
+
+var addNDSI = function(img) {
+  var NDSI = img.normalizedDifference(['green', 'swir1']).rename('ndsi');
+  return img.addBands(NDSI);
+};
+
+var allBands = addNDSI(with_NDVI); // Image with all bands + normalised difference bands
+var allBands = allBands.clipToCollection(region); //ToCollection
+
+Map.addLayer(allBands, {bands: ['red', 'green', 'blue'], max:0.5})
+
+var region = coast.buffer(1000); // within 1000m of coastline/AOI
+
+Map.addLayer(region);
+
+
+//_____________________________2) PCA_____________________________
+
+// a) Set up 
+
+var scale = 30; // Sets scale as 30m
+var AOI = region; // Sets the AOI as the coastline + 1km
+var bandNames = allBands.bandNames(); // Finds band names
+
+var meanDict = allBands.reduceRegion({ // Function to find the mean band values
+    reducer: ee.Reducer.mean(),
+    geometry: AOI,
+    scale: scale,
+    maxPixels: 1e9,
+});
+var means = ee.Image.constant(meanDict.values(bandNames));
+var centered = allBands.subtract(means);
+
+print(means); // I always print it, to help find errors in GEE - which can be tricky
+
+// b) Main
+
+// This helper function returns a list of new band names.
+var getNewBandNames = function(prefix) {
+  var seq = ee.List.sequence(1, bandNames.length());
+  return seq.map(function(b) {
+    return ee.String(prefix).cat(ee.Number(b).int());
+  });
+};
+
+/* This function accepts mean centered imagery, a scale, and a region in which to perform the analysis.  It returns the
+   Principal Components (PC) in the region as a new image. */
+   
+var getPrincipalComponents = function(centered, scale, region) {
+  var arrays = centered.toArray();   // Collapse the bands of the image into a 1D array per pixel.
+  var covar = arrays.reduceRegion({ // Compute the covariance of the bands within the region.
+    reducer: ee.Reducer.centeredCovariance(),
+    geometry: AOI,
+    scale: scale,
+    maxPixels: 1e9,
+  });
+
+  var covarArray = ee.Array(covar.get('array')); // Get the 'array' covariance result and cast to an array: this represents the band-to-band covariance within the region.
+
+  var eigens = covarArray.eigen();   // Perform an eigen analysis and slice apart the values and vectors.
+
+ 
+  var eigenValues = eigens.slice(1, 0, 1);  // This is a P-length vector of Eigenvalues.
+  print(eigenValues) // These data can be useful, so I print it
+  
+  var eigenVectors = eigens.slice(1, 1); // This is a PxP matrix with eigenvectors in rows.
+
+  var arrayImage = arrays.toArray(1); // Convert the array image to 2D arrays for matrix computations.
+
+  var principalComponents = ee.Image(eigenVectors).matrixMultiply(arrayImage); // Left multiply the image array by the matrix of eigenvectors.
+
+    var sdImage = ee.Image(eigenValues.sqrt())
+    .arrayProject([0]).arrayFlatten([getNewBandNames('sd')]); // Turn the square roots of the Eigenvalues into a P-band image.
+
+   return principalComponents  // Turn the PCs into a P-band image, normalized by SD.
+        .arrayProject([0]) // Throw out an an unneeded dimension, [[]] -> [].
+        .arrayFlatten([getNewBandNames('pc')]) // Make the one band array image a multi-band image, [] -> image.
+        .divide(sdImage); // Normalize the PCs by their SDs.
+};
+
+var pcImage = getPrincipalComponents(centered, scale, region); // Get the PCs at the specified scale and in the specified region
+var pcImage = ee.Image(pcImage);
+var pcImage = pcImage.select(['pc1', 'pc2', 'pc3']);
+pcImage = pcImage.clipToCollection(region); //ToCollection
+
+
+//_____________________________3) CLUSTERING_____________________________
+
+// a) Make a training dataset by sampling regions. This basically samples x number of pixels and "learns" about the variability in the image.
+var training = pcImage.sample({
+  region: AOI,
+  numPixels: 500000,//Samples 500k pixels within coast + 1km buffer
+});
+
+// b) Cluster
+
+var n = 75 // The number of clusters that you want, for the first order, we use 75, in the second order we use 40
+
+var clusterer = ee.Clusterer.wekaKMeans(n).train(training); // Defines the clusterer 
+
+var clustered = pcImage.cluster(clusterer);
+
+Export.image.toDrive({
+  image: clustered,
+  description: '', // name of image exported
+  scale: 10,
+  region: AOI,
+  maxPixels: 1e9,
+  });
+  
+ // This image should be exported to Drive, so you can interpret the clusters in a GIS software (e.g. ArcGIS or QGIS). 
+
